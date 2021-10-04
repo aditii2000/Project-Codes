@@ -1,0 +1,109 @@
+https://github.com/chadagreene/CDT
+https://www.youtube.com/watch?v=t46dTVp7NHY
+
+
+% View CDT documentation: 
+cdt deseason
+
+% Load example data: 
+load pacific_sst
+
+% Inspect the the variables in the workspace: 
+whos
+
+% Calculate a map of mean sea surface temps: 
+sst_mean = mean(sst,3);
+
+% Plot mean sea surface temperature: 
+imagescn(lon,lat,sst_mean)
+xlabel longitude
+ylabel latitude
+colorbar
+
+% View cmocean colormap options: 
+cmocean
+
+% Set the thermal colormap: 
+cmocean thermal
+
+% Add geopolitical borders: 
+hold on
+borders
+
+% Get the indices of the grid cell closest to (23N,115W): 
+row = near1(lat,23)
+lat(row)
+col = near1(lon,-115)
+lon(col)
+
+% Plot a circle at the location of interest: 
+plot(lon(col),lat(row),'ko')
+
+% Get a 1D array of temperatures at the location of interest: 
+sst1 = sst(row,col,:);
+size(sst1)
+
+% Turn sst1 into a column vector: 
+sst1 = squeeze(sst1);
+size(sst1)
+
+% Clear the map figure: 
+clf
+
+% Plot the time series of sst1: 
+plot(t,sst1)
+ylabel temperature
+xlabel time
+
+% Format the date axis labels:  
+datetick
+
+% Remove the seasonal cycle from sst1: 
+sst1_ds = deseason(sst1,t);
+
+% Plot the de-seasoned sst1 time series: 
+hold on
+plot(t,sst_ds)
+
+% Plot the linear trend in sea surface temperature: 
+polyplot(t,sst1)
+
+% Plot the linear trend of deseasoned temperature: 
+polyplot(t,sst1_ds)
+
+% Calculate the SST trend at the location of interest: 
+trend(sst1,12)
+
+% Verify the total amount of warming that has occurred since 1950: 
+trend(sst1,12)*67
+
+% Calculate a map of trends in sea surface temperature: 
+sst_tr = trend(sst,12);
+
+% Clear the current figure: 
+clf
+
+% Map the trends in sea surface temperature: 
+imagescn(lon,lat,sst_tr)
+cb = colorbar;
+ylabel(cb,'sst trend \circC/yr')
+
+% Set the colormap: 
+cmocean('balance','pivot')
+
+% Calculate trends with statistical p values: 
+[sst_tr,p] = trend(sst,12);
+
+% Determine if the trend at the single location of interest is significant: 
+mann_kendall(sst1)
+
+% Verify that random numbers do not produce a significant trend: 
+mann_kendall(rand(size(sst1)))
+
+% Calculate a map of statistical significance: 
+mk = mann_kendall(sst);
+
+% Add stippling where trends are significant: 
+hold
+stipple(lon,lat,mk)
+
